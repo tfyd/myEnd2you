@@ -32,10 +32,14 @@ class BaseProvider(Dataset):
         assert len(self.data_files) > 0, f'No files found in [{dataset_path}]. Check `dataset_path`.'
         
         self.data_files = [FileProvider(x, self.modality, seq_length) for x in self.data_files]
+        # print("data_files: ", self.data_files)
         self.num_files = len(self.data_files)
+        # print("num_files: ", self.num_files)
         self.total_num_seqs = np.ceil(self._get_total_num_seqs())
+        # print("total_num_seqs: ", self.total_num_seqs)
         self.label_names = self._get_label_names()
-        
+        # print("label_names: ", self.label_names)
+
         self.augment = augment
         if augment:
             self.data_transform = self._init_augment()
@@ -90,4 +94,7 @@ class BaseProvider(Dataset):
         data_file = self._get_file(idx)
         data, labels = data_file.read_hdf5_file()
         data, labels = self.process_input(data, labels)
+        # print(data_file)
+        # print(data)
+        # print(labels)
         return data, labels, str(data_file.file_path)

@@ -46,25 +46,32 @@ class Evaluator(BasePhase):
         """ Perform one epoch of training or evaluation.
             Depends on the argument `is_training`.
         """
-        
+         
         logging.info("Starting Evaluation!")
         
         provider = self.data_provider
         
         # Load model
-        self.load_checkpoint()
+        # self.load_checkpoint()
+        ckpt = self.load_checkpoint()
+        best_score = ckpt['validation_score']
+        logging.info(f'Model\'s score: {best_score}')
         
         # Put model for evaluation
-        self.model.eval()
+        # self.model.eval()
+        self.model.train(False)
+
         
         summary_scores = []
         num_outs = self.model.num_outs
         file_preds = {str(x.file_path.name):[] for x in provider.dataset.data_files}
         label_names = provider.dataset._get_label_names()
+        # Store all predictions/labels
         batch_preds = {str(x):[] for x in provider.dataset.label_names}
         batch_labels = {str(x):[] for x in provider.dataset.label_names}
         batch_masks = []
-        
+
+        mean_loss = 0.0
         # Use tqdm for progress bar
         with tqdm(total=len(provider)) as bar:
             bar.set_description('Evaluating model')
@@ -76,6 +83,7 @@ class Evaluator(BasePhase):
                     labels = labels.cuda()
                 
                 predictions = self.model(model_input)
+
                 for f in file_names:
                     file_preds[str(Path(f).name)].extend(predictions.data.cpu().numpy())
                 

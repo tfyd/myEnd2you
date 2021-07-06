@@ -30,6 +30,9 @@ class VisualModel(nn.Module):
                                  std=[0.229, 0.224, 0.225])
             
         self.model = nn.Sequential(*network)
+
+        print(self.model)
+
     
     @classmethod
     def _get_out_feats(cls, name):

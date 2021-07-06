@@ -19,7 +19,7 @@ def get_provider(modality):
     return {
         'audio': AudioProvider,
         'visual': VisualProvider,
-        'audiovisual': SingleFile_AVProvider
+        'audiovisual': MultiFile_AVProvider
     }[modality]
 
 

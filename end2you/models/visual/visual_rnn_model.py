@@ -6,6 +6,7 @@ from .visual_model import VisualModel
 from end2you.models.rnn import RNN
 
 
+
 class VisualRNNModel(nn.Module):
     
     def __init__(self, 
@@ -29,12 +30,13 @@ class VisualRNNModel(nn.Module):
         
         self.rnn, num_out_features = self._get_rnn_model(num_out_features)
         self.linear = nn.Linear(num_out_features, num_outs)
+        # self.dropout = nn.Dropout(p=0.5)
         self.num_outs = num_outs
         
     def _get_rnn_model(self, input_size:int):
         """ Builder method to instantiate an RNN object."""
         
-        rnn_args = {
+        rnn_args = { 
             'input_size': input_size,
             'hidden_size': 256,
             'num_layers': 2,
@@ -57,7 +59,11 @@ class VisualRNNModel(nn.Module):
         visual_out = visual_out.view(batch_size, seq_length, -1)
         
         rnn_out, _ = self.rnn(visual_out)
-        
+
         output = self.linear(rnn_out)
-        
+
+        # dp_out = self.dropout(rnn_out)
+
+        # output = self.linear(dp_out)
+
         return output

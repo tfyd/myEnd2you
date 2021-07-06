@@ -32,9 +32,21 @@ class FileProvider:
         
         with h5py.File(self.file_path, 'r') as dataset:
             num_samples = dataset.attrs[key]
+            print(num_samples)
         
         return num_samples
-    
+
+    def h5py_dataset_iterator(self, g, prefix=''):
+        for key in g.keys():
+            item = g[key]
+            path = '{}/{}'.format(prefix, key)
+            if isinstance(item, h5py.Dataset): # test for dataset
+                yield (path, item)
+            elif isinstance(item, h5py.Group): # test for group (go down)
+                yield from h5py_dataset_iterator(item, path)
+
+
+
     def _get_num_sequences(self, key:str = 'seq_num'):
         """ Returns the number of sequences in the file.
             Stored in file as attribute with name `seq_num`.
@@ -42,8 +54,14 @@ class FileProvider:
 
         with h5py.File(self.file_path, 'r') as dataset:
             num_samples = dataset.attrs[key]
+            print(num_samples)
+
+        with h5py.File(self.file_path, 'r') as f:
+            for (path, dset) in self.h5py_dataset_iterator(f):
+                print(path, dset)
         
         return num_samples
+
     
     def _get_label_names(self, key:str = 'label_names'):
         """ Returns the names of the labels.
@@ -95,6 +113,6 @@ class FileProvider:
             
             data = self.__get_data(dataset, start, end)
             labels = np.array(dataset['labels'][start:end])
-        
+        # print(data, labels)
         self.num_calls += 1
         return data, labels

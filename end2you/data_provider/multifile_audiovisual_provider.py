@@ -23,6 +23,14 @@ class MultiFile_AVProvider(Dataset):
         audio_dataset_path, visual_dataset_path = dataset_paths
         self.audio_provider = AudioProvider(audio_dataset_path, seq_length=seq_length)
         self.visual_provider = VisualProvider(visual_dataset_path, seq_length=seq_length)
+
+        # self.data_files = [FileProvider(x, self.modality, seq_length) for x in self.data_files]
+        # print("data_files: ", self.data_files)
+        # self.num_files = len(self.data_files)
+        # print("num_files: ", self.num_files)
+        self.total_num_seqs = np.ceil(self._get_total_num_seqs())
+        # print("total_num_seqs: ", self.total_num_seqs)
+        self.label_names = self._get_label_names()
     
     def _get_total_num_seqs(self):
         """Get total number of sequences."""
@@ -46,6 +54,8 @@ class MultiFile_AVProvider(Dataset):
         return len(self.audio_provider)
     
     def __getitem__(self, idx):
-        audio_data, _ = self.audio_provider[idx]
-        visual_data, labels = self.visual_provider[idx]
-        return [audio_data, visual_data], labels 
+        audio_data, audio_labels, _ = self.audio_provider[idx]
+        visual_data, labels, _ = self.visual_provider[idx]
+        # print("AUDIO_LABEL: \n", audio_labels)
+        # print("VISUAL_LABEL: \n",labels)
+        return [audio_data, visual_data], labels, "file"

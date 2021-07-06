@@ -26,6 +26,8 @@ class AttentionFusion(nn.Module):
         
         self.weights = nn.Linear(num_out_feats*2, num_out_feats*2)
         self.num_features = num_out_feats*2
+
+        # print("!!!!!!:", self.weights.weight.shape)
     
     def forward(self, x:list):
         """ Forward pass
@@ -42,5 +44,6 @@ class AttentionFusion(nn.Module):
             self.weights(torch.cat(proj_m, -1)), dim=-1)
         
         out_feats = attn_weights * torch.cat(proj_m, -1)
+        # print("???", out_feats.shape)
         
         return out_feats

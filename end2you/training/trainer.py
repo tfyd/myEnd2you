@@ -32,6 +32,10 @@ class Trainer(BasePhase):
                  root_dir:str,
                  model:nn.Module,
                  ckpt_path:str,
+                 visual_ckpt_path:str,
+                 audio_ckpt_path:str,
+                 freeze_visual:bool,
+                 freeze_audio:bool,
                  optimizer:torch.optim,
                  params:Params):
         """ Initialize trainer object class.
@@ -63,19 +67,34 @@ class Trainer(BasePhase):
         self.provider = data_providers
         self.summary_writer = summary_writers
         BaseProcess.set_logger('training.log')
-        super().__init__(model, ckpt_path, optimizer)
+        super().__init__(model, ckpt_path, visual_ckpt_path, audio_ckpt_path, freeze_visual, freeze_audio, optimizer)
     
     def start_training(self):
         """ Method that performs the training of the model.
         """
         
         logging.info("Starting training!")
-        
+        print("before load: ", self.model.state_dict().keys())
         best_score = float('-inf')
         if self.ckpt_path:
             ckpt = self.load_checkpoint()
             best_score = ckpt['validation_score']
             logging.info(f'Model\'s score: {best_score}')
+
+        if self.visual_ckpt_path:
+            print("load_visual_ckpt")
+            ckpt = self.load_visual_checkpoint()
+            visual_best_score = ckpt['validation_score']
+            logging.info(f'Visual Model\'s score: {visual_best_score}')
+
+        if self.audio_ckpt_path:
+            print("load_audio_ckpt")
+            ckpt = self.load_audio_checkpoint()
+            audio_best_score = ckpt['validation_score']
+            logging.info(f'Audio Model\'s score: {audio_best_score}')
+
+        print("afterload: ", self.model.state_dict().keys())
+
         
         save_ckpt_path = self.root_dir / 'model'
         for epoch in range(self.params.train.num_epochs):
@@ -105,7 +124,7 @@ class Trainer(BasePhase):
             self.save_checkpoint(dict2save,  
                                  is_best=is_best,
                                  checkpoint=save_ckpt_path)
-            
+
             # If best model save it.
             if is_best:
                 logging.info(f"- Found new best model with mean {self.metric}: {val_score:05.3f}")
@@ -142,7 +161,7 @@ class Trainer(BasePhase):
             is_best (bool): True if it is the best model seen till now.
             checkpoint (str): Folder to save model.
         """
-        
+        # print(state['state_dict'])
         checkpoint = Path(checkpoint)
         checkpoint.mkdir(exist_ok=True)
         
@@ -156,7 +175,7 @@ class Trainer(BasePhase):
         """ Perform one epoch of training or evaluation.
             Depends on the argument `is_training`.
         """
-        
+
         params = self.params.train if is_training else self.params.valid
         process = 'train' if is_training else 'valid'
         
@@ -167,9 +186,13 @@ class Trainer(BasePhase):
         
         num_outs = self.model.num_outs if not isinstance(
             self.model, nn.DataParallel) else self.model.module.num_outs
-        
-        self.model.train(is_training)
-        
+
+        for name, value in self.model.named_parameters():
+            if value.requires_grad:
+                print("requires_Grad ", name)
+            else:
+                print("not_requires_Grad ", name)
+
         # summary for current training loop and a running average object for loss
         mean_loss = 0.0
         
@@ -199,6 +222,8 @@ class Trainer(BasePhase):
                     labels = labels.cuda()
                 
                 predictions = self.model(model_input)
+                # print(predictions)
+                # print(labels)
                 
                 total_loss = nn.Parameter(
                     torch.tensor(0.0, dtype=input_dtype), 
@@ -244,7 +269,8 @@ class Trainer(BasePhase):
         for i, name in enumerate(label_names):
             scores[name] = self.eval_fn(batch_preds[name], batch_labels[name], batch_masks)
         epoch_summaries = [scores]
-        
+        # print(scores)
+
         # Reseting parameters of the data provider
         provider.dataset.reset()
         

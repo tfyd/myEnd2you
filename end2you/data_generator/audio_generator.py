@@ -42,14 +42,21 @@ class AudioGenerator(Generator):
 
         file_data, attrs_name = self.labelfile_reader.read_file(label_file)
         file_data = np.array(file_data).astype(np.float32)
+        # print(file_data)
         timestamps = file_data[:,0]
         labels = file_data[:-1,1:]
+        # print(timestamps)
+        # print(labels)
         
         seq_num = labels.shape[0] - 1
+        # seq_num = labels.shape[0]
+        print("labels.shape[0] - 1 = ", labels.shape[0], seq_num)
         
         clip = AudioFileClip(str(data_file), fps=self.fps)
         
         num_samples = int(self.fps * (timestamps[1] - timestamps[0]))
+        print(timestamps)
+        print(num_samples)
         frames = []        
         for i in range(len(timestamps) - 1):
             start_time = timestamps[i]
@@ -57,6 +64,7 @@ class AudioGenerator(Generator):
             
             data_frame = np.array(
                 list(clip.subclip(start_time, end_time).iter_frames()))
+            # print(data_frame.mean())
             data_frame = data_frame.mean(1)[:num_samples]
             
             if data_frame.shape[0] < num_samples:

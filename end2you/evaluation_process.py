@@ -17,11 +17,13 @@ class EvaluationProcess(BaseProcess):
                  params:Params,
                  *args, **kwargs):
         
+        print("try batch size 1 for test")
+        
         eval_fn = MetricProvider(params.metric)
         params.dict.update({'batch_size':1, 'is_training':False})
         data_provider = get_dataloader(params)
         
-        params.model.dict['input_size'] = data_provider.dataset.data_files[0]._get_num_samples()
+        params.model.dict['input_size'] = data_provider.dataset._get_frame_num_samples()
         
         # Model
         model = models.get_model(params.modality, **params.model.dict)

@@ -55,6 +55,7 @@ class Emo16(nn.Module):
         
         batch_size, seq_length, t = x.shape
         x = x.view(batch_size*seq_length, 1, t)
+
         x = F.dropout(x)
         
         audio_out = F.relu(self.conv1(x))

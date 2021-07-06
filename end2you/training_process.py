@@ -19,7 +19,6 @@ class TrainingProcess(BaseProcess):
     def __init__(self, 
                  params:Params,
                  *args, **kwargs):
-        
         # Define Loss function
         loss_cls = Losses(params.train.loss)
         
@@ -42,7 +41,7 @@ class TrainingProcess(BaseProcess):
         
         # Get optimizer to train model
         optimizer = optim.get_optimizer(params.train.optimizer)
-        optimizer = optimizer(model.parameters(), lr=params.train.learning_rate)
+        optimizer = optimizer(filter(lambda p:p.requires_grad, model.parameters()), lr=params.train.learning_rate)
         
         # Set device
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -76,6 +75,10 @@ class TrainingProcess(BaseProcess):
                                root_dir=params.root_dir,
                                model=model,
                                ckpt_path=params.ckpt_path,
+                               visual_ckpt_path=params.visual_ckpt_path,
+                               audio_ckpt_path=params.audio_ckpt_path,
+                               freeze_visual=params.freeze_visual,
+                               freeze_audio=params.freeze_audio,
                                optimizer=optimizer,
                                params=params)
     
